@@ -1,15 +1,19 @@
 const Messages = {
   CPFInvalido: "O CPF está inválido!",
   ValorInvalido: "Valor inserido não é aceitável!",
+  CamposVazios: "Campos vazios não são permitidos!",
 };
 
 const validarEntradaDeDados = (lancamento) => {
-  lancamento.cpf = refactorCPF(lancamento.cpf);
+  if (lancamento.cpf === null || lancamento.valor === null)
+    return Messages.CamposVazios;
 
   if (lancamento.valor <= -2000 || lancamento.valor >= 15000)
     return Messages.ValorInvalido;
 
+  lancamento.cpf = refactorCPF(lancamento.cpf);
   if (!validarCPF(lancamento.cpf)) return Messages.CPFInvalido;
+
   return null;
 };
 
@@ -43,7 +47,6 @@ const recuperarMaiorMenorLancamentos = (cpf, lancamentos) => {
     return [];
   }
 
-  // Encontra o menor e maior valor de lançamento para o CPF
   let menorLancamento = lancamentosDoCpf[0];
   let maiorLancamento = lancamentosDoCpf[0];
 
@@ -59,11 +62,50 @@ const recuperarMaiorMenorLancamentos = (cpf, lancamentos) => {
 };
 
 const recuperarMaioresSaldos = (lancamentos) => {
-  return [];
+  const saldosPorCpf = {};
+
+  lancamentos.forEach((lancamento) => {
+    const cpf = refactorCPF(lancamento.cpf);
+
+    if (!saldosPorCpf[cpf]) {
+      saldosPorCpf[cpf] = 0;
+    }
+
+    saldosPorCpf[cpf] += lancamento.valor;
+  });
+
+  const saldos = Object.keys(saldosPorCpf).map((cpf) => ({
+    cpf,
+    valor: saldosPorCpf[cpf],
+  }));
+
+  saldos.sort((a, b) => b.valor - a.valor);
+
+  return saldos.slice(0, 3);
 };
 
 const recuperarMaioresMedias = (lancamentos) => {
-  return [];
+  const mediasPorCpf = {};
+
+  lancamentos.forEach((lancamento) => {
+    const cpf = refactorCPF(lancamento.cpf);
+
+    if (!mediasPorCpf[cpf]) {
+      mediasPorCpf[cpf] = { soma: 0, count: 0 };
+    }
+
+    mediasPorCpf[cpf].soma += lancamento.valor;
+    mediasPorCpf[cpf].count += 1;
+  });
+
+  const mediasArray = Object.keys(mediasPorCpf).map((cpf) => ({
+    cpf,
+    valor: mediasPorCpf[cpf].soma / mediasPorCpf[cpf].count,
+  }));
+
+  mediasArray.sort((a, b) => b.valor - a.valor);
+
+  return mediasArray.slice(0, 3);
 };
 
 // VALIDADOR DE CPF, RETORNA UM BOOLEANO
